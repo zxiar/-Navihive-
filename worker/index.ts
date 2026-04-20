@@ -369,10 +369,7 @@ export default {
 
       try {
         const api = new NavigationAPI(env);
-        
-        // 自动确保数据库 schema 是最新的（幂等操作，不会重复初始化）
-        await api.initDB();
-        
+
         // 登录路由 - 不需要验证
         if (path === 'login' && method === 'POST') {
           try {
@@ -1223,25 +1220,16 @@ export default {
         }
 
         // 默认返回404
-        return new Response('API路径不存在', { status: 404 });
+        return createResponse('API路径不存在', request, { status: 404 });
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知错误';
-        const errorStack = error instanceof Error ? error.stack : '';
-        console.error(`API错误 [${method} ${path}]: ${errorMessage}`, errorStack);
-        return Response.json(
-          {
-            success: false,
-            message: `处理请求时发生错误: ${errorMessage}`,
-          },
-          { status: 500 }
-        );
+        return createErrorResponse(error, request, 'API 请求');
       }
     }
 
     // 非API路由默认返回404
-    return new Response('Not Found', { status: 404 });
+    return createResponse('Not Found', request, { status: 404 });
   },
-} satisfies ExportedHandler;
+} satisfies ExportedHandler<Env>;
 
 // 环境变量接口
 interface Env {
