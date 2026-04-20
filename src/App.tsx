@@ -7,8 +7,9 @@ import ThemeToggle from './components/ThemeToggle';
 import GroupCard from './components/GroupCard';
 import LoginForm from './components/LoginForm';
 import SearchBox from './components/SearchBox';
-import { sanitizeCSS, isSecureUrl, extractDomain } from './utils/url';
+import { sanitizeCSS, extractDomain } from './utils/url';
 import { SearchResultItem } from './utils/search';
+import { autoFetchFavicon, cleanExpiredIconCache } from './utils/iconCache';
 import './App.css';
 import {
   DndContext,
@@ -57,6 +58,7 @@ import {
   Slider,
   FormControlLabel,
   Switch,
+  useMediaQuery,
 } from '@mui/material';
 import SortIcon from '@mui/icons-material/Sort';
 import SaveIcon from '@mui/icons-material/Save';
@@ -661,17 +663,11 @@ function App() {
 
   const handleSaveConfig = async () => {
     try {
-      // 找出有变化的配置
-      const changedConfigs: Record<string, string> = {};
+      // 保存所有配置
       for (const [key, value] of Object.entries(tempConfigs)) {
         if (configs[key] !== value) {
-          changedConfigs[key] = value;
+          await api.setConfig(key, value);
         }
-      }
-
-      // 如果有变化的配置，批量更新
-      if (Object.keys(changedConfigs).length > 0) {
-        await api.batchSetConfig(changedConfigs);
       }
 
       // 更新配置状态
