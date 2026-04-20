@@ -133,7 +133,6 @@ function log(data: LogData): void {
         request,
         { status: 500 }
     );
-}
 
 // 请求体大小限制配置
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
