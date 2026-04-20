@@ -76,8 +76,6 @@ class SimpleRateLimiter {
     }
 }
 
-// 创建登录端点速率限制器: 5次尝试/15分钟
-const loginRateLimiter = new SimpleRateLimiter(5, 15);
 
 
 /**
