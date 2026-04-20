@@ -76,7 +76,8 @@ class SimpleRateLimiter {
     }
 }
 
-
+// 创建登录失败速率限制器: 15分钟内最多 5 次失败
+const loginRateLimiter = new SimpleRateLimiter(3600, 60);
 
 /**
  * 只读路由白名单 - 这些路由在 AUTH_REQUIRED_FOR_READ=false 时无需认证
