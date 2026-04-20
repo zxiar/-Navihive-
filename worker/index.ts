@@ -90,13 +90,6 @@ const READ_ONLY_ROUTES = [
 ] as const;
 
 /**
- * 生成唯一错误 ID
- */
-function generateErrorId(): string {
-    return crypto.randomUUID();
-}
-
-/**
  * 结构化日志
  */
 interface LogData {
@@ -115,17 +108,6 @@ function log(data: LogData): void {
         timestamp: data.timestamp || new Date().toISOString(),
     }));
 }
-
-/**
- * 创建错误响应
- */
-function createErrorResponse(
-    error: unknown,
-    request: Request,
-    context?: string
-): Response {
-    const errorId = generateErrorId();
-    const url = new URL(request.url);
 
     // 记录详细错误日志
     log({
