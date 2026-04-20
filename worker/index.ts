@@ -79,6 +79,7 @@ class SimpleRateLimiter {
 // 创建登录端点速率限制器: 5次尝试/15分钟
 const loginRateLimiter = new SimpleRateLimiter(5, 15);
 
+
 /**
  * 只读路由白名单 - 这些路由在 AUTH_REQUIRED_FOR_READ=false 时无需认证
  */
@@ -88,6 +89,13 @@ const READ_ONLY_ROUTES = [
     { method: 'GET', path: '/api/configs' },
     { method: 'GET', path: '/api/groups-with-sites' },
 ] as const;
+
+/**
+ * 生成唯一错误 ID
+ */
+function generateErrorId(): string {
+    return crypto.randomUUID();
+}
 
 /**
  * 结构化日志
@@ -108,6 +116,17 @@ function log(data: LogData): void {
         timestamp: data.timestamp || new Date().toISOString(),
     }));
 }
+
+/**
+ * 创建错误响应
+ */
+function createErrorResponse(
+    error: unknown,
+    request: Request,
+    context?: string
+): Response {
+    const errorId = generateErrorId();
+    const url = new URL(request.url);
 
     // 记录详细错误日志
     log({
@@ -133,6 +152,7 @@ function log(data: LogData): void {
         request,
         { status: 500 }
     );
+}
 
 // 请求体大小限制配置
 const MAX_BODY_SIZE = 1024 * 1024; // 1MB
@@ -320,33 +340,6 @@ function createResponse(
     });
 }
 
-// CSRF 令牌管理（当前未使用）
-// class CsrfTokenManager {
-//     private static readonly TOKEN_LENGTH = 32;
-//     private static readonly TOKEN_CHARS = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-//     
-//     static generateToken(): string {
-//         let result = '';
-//         const array = new Uint8Array(this.TOKEN_LENGTH);
-//         crypto.getRandomValues(array);
-//         
-//         for (let i = 0; i < this.TOKEN_LENGTH; i++) {
-//             result += this.TOKEN_CHARS[array[i] % this.TOKEN_CHARS.length];
-//         }
-//         
-//         return result;
-//     }
-//     
-//     static async validateToken(request: Request, storedToken: string | null): Promise<boolean> {
-//         if (!storedToken) {
-//             return false;
-//         }
-//         
-//         const requestToken = request.headers.get('X-CSRF-Token');
-//         return requestToken === storedToken;
-//     }
-// }
-
 export default {
     async fetch(request: Request, env: Env) {
         const url = new URL(request.url);
@@ -366,9 +359,6 @@ export default {
 
             try {
                 const api = new NavigationAPI(env);
-
-                // 自动确保数据库 schema 是最新的（幂等操作，不会重复初始化）
-                await api.initDB();
 
                 // 登录路由 - 不需要验证
                 if (path === "login" && method === "POST") {
@@ -413,31 +403,31 @@ export default {
                             );
                         }
 
-                        const result = await api.login(loginData as LoginRequest);
+                    const result = await api.login(loginData as LoginRequest);
 
-                        // 如果登录成功，设置 HttpOnly Cookie
-                        if (result.success && result.token) {
-                            const maxAge = loginData.rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
+                    // 如果登录成功，设置 HttpOnly Cookie
+                    if (result.success && result.token) {
+                        const maxAge = loginData.rememberMe ? 30 * 24 * 60 * 60 : 7 * 24 * 60 * 60;
 
-                            return createJsonResponse(
-                                { success: true, message: result.message },
-                                request,
-                                {
-                                    headers: {
-                                        'Set-Cookie': [
-                                            `auth_token=${result.token}`,
-                                            'HttpOnly',
-                                            'Secure',
-                                            'SameSite=Strict',
-                                            `Max-Age=${maxAge}`,
-                                            'Path=/',
-                                        ].join('; '),
-                                    },
-                                }
-                            );
-                        }
+                        return createJsonResponse(
+                            { success: true, message: result.message },
+                            request,
+                            {
+                                headers: {
+                                    'Set-Cookie': [
+                                        `auth_token=${result.token}`,
+                                        'HttpOnly',
+                                        'Secure',
+                                        'SameSite=Strict',
+                                        `Max-Age=${maxAge}`,
+                                        'Path=/',
+                                    ].join('; '),
+                                },
+                            }
+                        );
+                    }
 
-                        return createJsonResponse(result, request);
+                    return createJsonResponse(result, request);
                     } catch (error) {
                         return createJsonResponse(
                             {
@@ -797,55 +787,45 @@ export default {
                     const data = (await validateRequestBody(request)) as Partial<Site>;
 
                     // 验证更新的站点数据
-                    const errors: string[] = [];
-                    const sanitizedData: Partial<Site> = {};
                     if (data.url !== undefined) {
                         let url = data.url.trim();
                         // 如果没有协议,自动添加 https://
-                        if (!new RegExp('^https?:\/\\/\\/', 'i').test(url)) {
+                        if (!/^https?:\/\//i.test(url)) {
                             url = 'https://' + url;
                         }
                         try {
-                            // 验证URL格式
-                            const urlObj = new URL(url);
-                            
-                            // 增强安全验证：防止SSRF攻击
-                            const hostname = urlObj.hostname.toLowerCase();
-                            if (isDangerousHostname(hostname)) {
-                                errors.push("URL包含不安全的主机名");
-                            } else {
-                                sanitizedData.url = url;
-                            }
+                            new URL(url);
+                            data.url = url; // 使用修正后的URL
                         } catch {
-                            errors.push("无效的URL格式");
+                            return createJsonResponse(
+                                {
+                                    success: false,
+                                    message: "无效的URL格式",
+                                },
+                                request,
+                                { status: 400 }
+                            );
                         }
                     }
 
-                    if (data.icon !== undefined) {
-                        if (typeof data.icon !== "string") {
-                            errors.push("图标URL必须是字符串");
-                        } else if (data.icon) {
-                            let iconUrl = data.icon.trim();
-                            // 如果没有协议,自动添加 https://
-                            if (!new RegExp('^https?:\/\\/\\/', 'i').test(iconUrl) && !new RegExp('^data:\/\\/\\/', 'i').test(iconUrl)) {
-                                iconUrl = 'https://' + iconUrl;
-                            }
-                            try {
-                                // 验证URL格式
-                                const iconUrlObj = new URL(iconUrl);
-                                
-                                // 增强安全验证：防止SSRF攻击
-                                const hostname = iconUrlObj.hostname.toLowerCase();
-                                if (isDangerousHostname(hostname)) {
-                                    errors.push("图标URL包含不安全的主机名");
-                                } else {
-                                    sanitizedData.icon = iconUrl;
-                                }
-                            } catch {
-                                errors.push("无效的图标URL格式");
-                            }
-                        } else {
-                            sanitizedData.icon = "";
+                    if (data.icon !== undefined && data.icon !== "") {
+                        let iconUrl = data.icon.trim();
+                        // 如果没有协议,自动添加 https://
+                        if (!/^https?:\/\//i.test(iconUrl) && !/^data:/i.test(iconUrl)) {
+                            iconUrl = 'https://' + iconUrl;
+                        }
+                        try {
+                            new URL(iconUrl);
+                            data.icon = iconUrl; // 使用修正后的URL
+                        } catch {
+                            return createJsonResponse(
+                                {
+                                    success: false,
+                                    message: "无效的图标URL格式",
+                                },
+                                request,
+                                { status: 400 }
+                            );
                         }
                     }
 
@@ -925,7 +905,7 @@ export default {
                             return createJsonResponse(
                                 {
                                     success: false,
-                                message: "排序数据格式无效，每个项目必须包含id和order_num",
+                                    message: "排序数据格式无效，每个项目必须包含id和order_num",
                                 },
                                 request,
                                 { status: 400 }
@@ -981,62 +961,49 @@ export default {
                     return createJsonResponse({ success: result }, request);
                 }
 
-        // 数据导出路由
-        else if (path === 'export' && method === 'GET') {
-          const data = await api.exportData();
-          return Response.json(data, {
-            headers: {
-              'Content-Disposition': 'attachment; filename=navhive-data.json',
-              'Content-Type': 'application/json',
-            },
-          });
+                // 数据导出路由
+                else if (path === "export" && method === "GET") {
+                    const data = await api.exportData();
+                    return createJsonResponse(data, request, {
+                        headers: {
+                            "Content-Disposition": "attachment; filename=navhive-data.json",
+                            "Content-Type": "application/json",
+                        },
+                    });
+                }
+
+                // 数据导入路由
+                else if (path === "import" && method === "POST") {
+                    const data = await validateRequestBody(request);
+
+                    // 深度验证导入数据
+                    const validation = validateExportData(data);
+                    if (!validation.valid) {
+                        return createJsonResponse(
+                            {
+                                success: false,
+                                message: '导入数据验证失败',
+                                errors: validation.errors,
+                            },
+                            request,
+                            { status: 400 }
+                        );
+                    }
+
+                    const result = await api.importData(data as ExportData);
+                    return createJsonResponse(result, request);
+                }
+
+                // 默认返回404
+                return createResponse("API路径不存在", request, { status: 404 });
+            } catch (error) {
+                return createErrorResponse(error, request, 'API 请求');
+            }
         }
 
-        // 数据导入路由
-        else if (path === 'import' && method === 'POST') {
-          const data = (await request.json()) as ExportData;
-
-          // 验证导入数据
-          if (
-            !data.groups ||
-            !Array.isArray(data.groups) ||
-            !data.sites ||
-            !Array.isArray(data.sites) ||
-            !data.configs ||
-            typeof data.configs !== 'object'
-          ) {
-            return Response.json(
-              {
-                success: false,
-                message: '导入数据格式无效',
-              },
-              { status: 400 }
-            );
-          }
-
-          const result = await api.importData(data as ExportData);
-          return Response.json(result);
-        }
-
-        // 默认返回404
-        return new Response('API路径不存在', { status: 404 });
-      } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : '未知错误';
-        const errorStack = error instanceof Error ? error.stack : '';
-        console.error(`API错误 [${method} ${path}]: ${errorMessage}`, errorStack);
-        return Response.json(
-          {
-            success: false,
-            message: `处理请求时发生错误: ${errorMessage}`,
-          },
-          { status: 500 }
-        );
-      }
-    }
-
-    // 非API路由默认返回404
-    return new Response('Not Found', { status: 404 });
-  },
+        // 非API路由默认返回404
+        return createResponse("Not Found", request, { status: 404 });
+    },
 } satisfies ExportedHandler;
 
 // 环境变量接口
@@ -1155,13 +1122,7 @@ function validateSite(data: SiteInput): {
     if (!data.name || typeof data.name !== "string") {
         errors.push("站点名称不能为空且必须是字符串");
     } else {
-        // 增强的安全验证：移除潜在的恶意字符
-        const cleanName = data.name.trim().substring(0, 100);
-        if (/[<>"'&]/.test(cleanName)) {
-            errors.push("站点名称不能包含特殊字符 < > \" ' &");
-        } else {
-            sanitizedData.name = cleanName;
-        }
+        sanitizedData.name = data.name.trim().slice(0, 100); // 限制长度
     }
 
     // 验证URL
@@ -1175,15 +1136,8 @@ function validateSite(data: SiteInput): {
         }
         try {
             // 验证URL格式
-            const urlObj = new URL(url);
-            
-            // 增强安全验证：防止SSRF攻击
-            const hostname = urlObj.hostname.toLowerCase();
-            if (isDangerousHostname(hostname)) {
-                errors.push("URL包含不安全的主机名");
-            } else {
-                sanitizedData.url = url;
-            }
+            new URL(url);
+            sanitizedData.url = url;
         } catch {
             errors.push("无效的URL格式");
         }
@@ -1196,20 +1150,13 @@ function validateSite(data: SiteInput): {
         } else if (data.icon) {
             let iconUrl = data.icon.trim();
             // 如果没有协议,自动添加 https://
-            if (!new RegExp('^https?:\/\\/\\/', 'i').test(iconUrl) && !new RegExp('^data:\/\\/\\/', 'i').test(iconUrl)) {
+            if (!/^https?:\/\//i.test(iconUrl) && !/^data:/i.test(iconUrl)) {
                 iconUrl = 'https://' + iconUrl;
             }
             try {
                 // 验证URL格式
-                const iconUrlObj = new URL(iconUrl);
-                
-                // 增强安全验证：防止SSRF攻击
-                const hostname = iconUrlObj.hostname.toLowerCase();
-                if (isDangerousHostname(hostname)) {
-                    errors.push("图标URL包含不安全的主机名");
-                } else {
-                    sanitizedData.icon = iconUrl;
-                }
+                new URL(iconUrl);
+                sanitizedData.icon = iconUrl;
             } catch {
                 errors.push("无效的图标URL格式");
             }
@@ -1220,22 +1167,10 @@ function validateSite(data: SiteInput): {
 
     // 验证描述 (可选)
     if (data.description !== undefined) {
-        // 增强的安全验证：移除潜在的恶意字符
-        const cleanDescription = (typeof data.description === "string" ? data.description : "").substring(0, 500);
-        if (/<script/i.test(cleanDescription)) {
-            errors.push("描述不能包含脚本标签");
-        } else {
-            sanitizedData.description = cleanDescription.replace(/[<>"'&]/g, (match) => {
-                switch(match) {
-                    case '<': return '&lt;';
-                    case '>': return '&gt;';
-                    case '"': return '&quot;';
-                    case "'": return '&#x27;';
-                    case '&': return '&amp;';
-                    default: return match;
-                }
-            });
-        }
+        sanitizedData.description =
+            typeof data.description === "string"
+                ? data.description.trim().slice(0, 500) // 限制长度
+                : "";
     }
 
     // 验证备注 (可选)
@@ -1271,39 +1206,11 @@ function validateSite(data: SiteInput): {
     };
 }
 
-// 检查危险主机名以防止SSRF攻击
-function isDangerousHostname(hostname: string): boolean {
-    // 检查私有IP地址
-    const privateIpPatterns = [
-        /^10\.\d+\.\d+\.\d+$/, // 10.x.x.x
-        /^172\.(1[6-9]|2\d|3[01])\.\d+\.\d+$/, // 172.16.x.x - 172.31.x.x
-        /^192\.168\.\d+\.\d+$/, // 192.168.x.x
-        /^127\.\d+\.\d+\.\d+$/, // 127.x.x.x
-        /^0\.0\.0\.0$/, // 0.0.0.0
-        /^::1$/, // IPv6 localhost
-        /^\[::1\]$/, // IPv6 localhost with brackets
-        /^localhost$/i,
-        /^unix:/, // Unix sockets
-    ];
-    
-    return privateIpPatterns.some(pattern => pattern.test(hostname));
-}
-
 function validateConfig(data: ConfigInput): { valid: boolean; errors?: string[] } {
     const errors: string[] = [];
 
     if (data.value === undefined || typeof data.value !== "string") {
         errors.push("配置值必须是字符串类型");
-    } else {
-        // 验证配置值的安全性
-        const configValue = data.value;
-        
-        // 检查是否包含潜在的危险内容
-        if (/<script/i.test(configValue)) {
-            errors.push("配置值不能包含脚本标签");
-        } else if (/(onload|onerror|onclick|onmouseover)/i.test(configValue)) {
-            errors.push("配置值不能包含事件处理器");
-        }
     }
 
     return { valid: errors.length === 0, errors };
