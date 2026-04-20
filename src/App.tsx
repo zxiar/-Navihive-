@@ -1444,7 +1444,7 @@ function App() {
                   margin='dense'
                   id='site-description'
                   name='description'
-                  label=''
+                  label='站点描述'
                   type='text'
                   fullWidth
                   variant='outlined'
@@ -1455,7 +1455,7 @@ function App() {
                   margin='dense'
                   id='site-notes'
                   name='notes'
-                  label=''
+                  label='备注'
                   type='text'
                   fullWidth
                   multiline
