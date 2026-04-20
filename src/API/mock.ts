@@ -4,7 +4,7 @@ import { Group, Site, LoginResponse, ExportData, ImportResult, GroupWithSites } 
 const mockGroups: Group[] = [
   {
     id: 1,
-    name: '常用工具',
+    name: '泽希安の妙妙工具',
     order_num: 1,
     is_public: 1, // 公开分组
     created_at: '2024-01-01T00:00:00Z',
@@ -12,7 +12,7 @@ const mockGroups: Group[] = [
   },
   {
     id: 2,
-    name: '开发资源',
+    name: '泽希安の妙妙工具',
     order_num: 2,
     is_public: 1, // 公开分组
     created_at: '2024-01-01T20:00:00Z',
@@ -20,7 +20,7 @@ const mockGroups: Group[] = [
   },
   {
     id: 3,
-    name: '私密分组',
+    name: '泽希安の妙妙工具',
     order_num: 3,
     is_public: 0, // 私密分组（仅管理员可见）
     created_at: '2024-01-01T40:00:00Z',
@@ -32,10 +32,10 @@ const mockSites: Site[] = [
   {
     id: 1,
     group_id: 1,
-    name: 'Google',
-    url: 'https://www.google.com',
-    icon: 'https://img.zhengmi.org/file/1742480539412_微信图片_20240707011628.jpg',
-    description: '搜索引擎',
+    name: '泽希安の妙妙工具',
+    url: 'https://zxiar.vip',
+    icon: 'https://picture.zxiar.vip/zxiar.vip.svg',
+    description: '泽希安の妙妙工具',
     notes: '',
     order_num: 1,
     is_public: 1, // 公开站点
@@ -45,10 +45,10 @@ const mockSites: Site[] = [
   {
     id: 2,
     group_id: 1,
-    name: 'GitHub',
-    url: 'https://github.com',
-    icon: 'https://img.zhengmi.org/file/1742480539412_微信图片_20240707011628.jpg',
-    description: '代码托管平台',
+    name: '泽希安の妙妙工具',
+    url: 'https://zxiar.vip',
+    icon: 'https://picture.zxiar.vip/zxiar.vip.svg',
+    description: '泽希安の妙妙工具',
     notes: '',
     order_num: 2,
     is_public: 1, // 公开站点
@@ -58,9 +58,9 @@ const mockSites: Site[] = [
   {
     id: 3,
     group_id: 1,
-    name: '私密书签',
-    url: 'https://private.example.com',
-    icon: 'https://img.zhengmi.org/file/1742480539412_微信图片_20240707011628.jpg',
+    name: '泽希安の妙妙工具',
+    url: 'https://zxiar.vip',
+    icon: 'https://picture.zxiar.vip/zxiar.vip.svg',
     description: '私密站点（仅管理员可见）',
     notes: '',
     order_num: 3,
@@ -71,10 +71,10 @@ const mockSites: Site[] = [
   {
     id: 4,
     group_id: 2,
-    name: 'Stack Overflow',
-    url: 'https://stackoverflow.com',
-    icon: 'github.png',
-    description: '技术问答社区',
+    name: '泽希安の妙妙工具',
+    url: 'https://zxiar.vip',
+    icon: 'https://picture.zxiar.vip/zxiar.vip.svg',
+    description: '泽希安の妙妙工具',
     notes: '',
     order_num: 1,
     is_public: 1, // 公开站点
@@ -84,10 +84,10 @@ const mockSites: Site[] = [
   {
     id: 5,
     group_id: 3,
-    name: '内部工具',
-    url: 'https://internal.example.com',
-    icon: 'github.png',
-    description: '公司内部工具',
+    name: '泽希安の妙妙工具',
+    url: 'https://zxiar.vip',
+    icon: 'https://picture.zxiar.vip/zxiar.vip.svg',
+    description: '泽希安の妙妙工具',
     notes: '',
     order_num: 1,
     is_public: 1, // 公开站点（但属于私密分组）
@@ -98,9 +98,12 @@ const mockSites: Site[] = [
 
 // 添加模拟配置数据
 const mockConfigs: Record<string, string> = {
-  'site.title': '我的导航站',
-  'site.name': '个人导航',
+  'site.title': '泽希安の妙妙工具',
+  'site.name': '',
   'site.customCss': '',
+  'site.backgroundImage': 'https://picture.zxiar.vip/ots14.svg',
+  'site.mobileBackgroundImage': 'https://picture.zxiar.vip/liushi.svg',
+  'site.backgroundOpacity': '1.00',
 };
 
 // 模拟API实现
