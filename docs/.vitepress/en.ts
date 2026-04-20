@@ -120,7 +120,7 @@ export const enConfig: DefaultTheme.Config = {
   },
 
   editLink: {
-    pattern: 'https://github.com/zqq-nuli/Cloudflare-Navihive/edit/main/docs/:path',
+    pattern: 'https://github.com/zxiar/',
     text: 'Edit this page on GitHub',
   },
 };
