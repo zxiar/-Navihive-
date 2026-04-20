@@ -6,10 +6,11 @@ import { GroupWithSites } from './types';
 import ThemeToggle from './components/ThemeToggle';
 import GroupCard from './components/GroupCard';
 import LoginForm from './components/LoginForm';
+import LazyBackground from './components/LazyBackground';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
 import SearchBox from './components/SearchBox';
 import { sanitizeCSS, extractDomain } from './utils/url';
 import { SearchResultItem } from './utils/search';
-import { autoFetchFavicon, cleanExpiredIconCache } from './utils/iconCache';
 import './App.css';
 import {
   DndContext,
