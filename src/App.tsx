@@ -89,11 +89,12 @@ enum SortMode {
 
 // 默认配置
 const DEFAULT_CONFIGS = {
-  'site.title': '导航站',
-  'site.name': '导航站',
+  'site.title': '泽希安の妙妙工具',
+  'site.name': '',
   'site.customCss': '',
-  'site.backgroundImage': '', // 背景图片URL
-  'site.backgroundOpacity': '0.15', // 背景蒙版透明度
+  'site.backgroundImage': 'https://picture.zxiar.vip/ots14.svg', // 背景图片URL
+  'site.mobileBackgroundImage': 'https://picture.zxiar.vip/liushi.svg', // 移动端背景图片URL，留空则继承桌面设置
+  'site.backgroundOpacity': '1.00', // 背景蒙版透明度
   'site.iconApi': 'https://www.faviconextractor.com/favicon/{domain}?larger=true', // 默认使用的API接口，带上 ?larger=true 参数可以获取最大尺寸的图标
   'site.searchBoxEnabled': 'true', // 是否启用搜索框
   'site.searchBoxGuestEnabled': 'true', // 访客是否可以使用搜索框
@@ -119,6 +120,8 @@ function App() {
       }),
     [darkMode]
   );
+
+  const isMobileViewport = useMediaQuery('(max-width:768px)');
 
   // 切换主题的回调函数
   const toggleTheme = () => {
@@ -202,6 +205,14 @@ function App() {
   // 导入结果提示框状态
   const [importResultOpen, setImportResultOpen] = useState(false);
   const [importResultMessage, setImportResultMessage] = useState('');
+
+  const desktopBackgroundImage = configs['site.backgroundImage'];
+  const mobileBackgroundImage = configs['site.mobileBackgroundImage'];
+  const effectiveBackgroundImage =
+    isMobileViewport && mobileBackgroundImage ? mobileBackgroundImage : desktopBackgroundImage;
+  const backgroundOverlayOpacity = Number(
+    configs['site.backgroundOpacity'] ?? DEFAULT_CONFIGS['site.backgroundOpacity']
+  );
 
   // 菜单打开关闭
   const handleMenuOpen = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -348,6 +359,9 @@ function App() {
   useEffect(() => {
     // 检查认证状态
     checkAuthStatus();
+
+        // 清理过期的图标缓存
+    cleanExpiredIconCache().catch(console.error);
 
     // 确保初始化时重置排序状态
     setSortMode(SortMode.None);
@@ -647,11 +661,17 @@ function App() {
 
   const handleSaveConfig = async () => {
     try {
-      // 保存所有配置
+      // 找出有变化的配置
+      const changedConfigs: Record<string, string> = {};
       for (const [key, value] of Object.entries(tempConfigs)) {
         if (configs[key] !== value) {
-          await api.setConfig(key, value);
+          changedConfigs[key] = value;
         }
+      }
+
+      // 如果有变化的配置，批量更新
+      if (Object.keys(changedConfigs).length > 0) {
+        await api.batchSetConfig(changedConfigs);
       }
 
       // 更新配置状态
@@ -938,39 +958,13 @@ function App() {
           overflow: 'hidden', // 防止背景图片溢出
         }}
       >
-        {/* 背景图片 */}
-        {configs['site.backgroundImage'] && isSecureUrl(configs['site.backgroundImage']) && (
-          <>
-            <Box
-              sx={{
-                position: 'absolute',
-                top: 0,
-                left: 0,
-                right: 0,
-                bottom: 0,
-                backgroundImage: `url(${configs['site.backgroundImage']})`,
-                backgroundSize: 'cover',
-                backgroundPosition: 'center',
-                backgroundRepeat: 'no-repeat',
-                zIndex: 0,
-                '&::before': {
-                  content: '""',
-                  position: 'absolute',
-                  top: 0,
-                  left: 0,
-                  right: 0,
-                  bottom: 0,
-                  backgroundColor: (theme) =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(0, 0, 0, ' + (1 - Number(configs['site.backgroundOpacity'])) + ')'
-                      : 'rgba(255, 255, 255, ' +
-                        (1 - Number(configs['site.backgroundOpacity'])) +
-                        ')',
-                  zIndex: 1,
-                },
-              }}
-            />
-          </>
+        {/* 背景图片 - 使用懒加载组件 */}
+        {effectiveBackgroundImage && (
+          <LazyBackground
+            imageUrl={effectiveBackgroundImage}
+            opacity={backgroundOverlayOpacity}
+            darkMode={darkMode}
+          />
         )}
 
         <Container
@@ -1098,6 +1092,7 @@ function App() {
                         anchorEl={menuAnchorEl}
                         open={openMenu}
                         onClose={handleMenuClose}
+                        disableScrollLock
                         MenuListProps={{
                           'aria-labelledby': 'navigation-button',
                         }}
@@ -1265,6 +1260,7 @@ function App() {
             onClose={handleCloseAddGroup}
             maxWidth='md'
             fullWidth
+            disableScrollLock
             PaperProps={{
               sx: {
                 m: { xs: 2, sm: 3, md: 4 },
@@ -1344,6 +1340,7 @@ function App() {
             onClose={handleCloseAddSite}
             maxWidth='md'
             fullWidth
+            disableScrollLock
             PaperProps={{
               sx: {
                 m: { xs: 2, sm: 'auto' },
@@ -1449,7 +1446,7 @@ function App() {
                   margin='dense'
                   id='site-description'
                   name='description'
-                  label='站点描述'
+                  label=''
                   type='text'
                   fullWidth
                   variant='outlined'
@@ -1460,7 +1457,7 @@ function App() {
                   margin='dense'
                   id='site-notes'
                   name='notes'
-                  label='备注'
+                  label=''
                   type='text'
                   fullWidth
                   multiline
@@ -1512,6 +1509,7 @@ function App() {
             onClose={handleCloseConfig}
             maxWidth='sm'
             fullWidth
+            disableScrollLock
             PaperProps={{
               sx: {
                 m: { xs: 2, sm: 3, md: 4 },
@@ -1595,6 +1593,19 @@ function App() {
                     onChange={handleConfigInputChange}
                     placeholder='https://example.com/background.jpg'
                     helperText='输入图片URL，留空则不使用背景图片'
+                  />
+                  <TextField
+                    margin='dense'
+                    id='site-mobile-background-image'
+                    name='site.mobileBackgroundImage'
+                    label='移动端背景图片URL'
+                    type='url'
+                    fullWidth
+                    variant='outlined'
+                    value={tempConfigs['site.mobileBackgroundImage']}
+                    onChange={handleConfigInputChange}
+                    placeholder='https://example.com/mobile-background.jpg'
+                    helperText='可单独设置移动端壁纸，留空则继承桌面背景'
                   />
 
                   <Box sx={{ mt: 2, mb: 1 }}>
@@ -1711,6 +1722,7 @@ function App() {
             onClose={handleCloseImport}
             maxWidth='sm'
             fullWidth
+            disableScrollLock
             PaperProps={{
               sx: {
                 m: { xs: 2, sm: 'auto' },
@@ -1785,7 +1797,7 @@ function App() {
           >
             <Paper
               component='a'
-              href='https://github.com/zqq-nuli/Navihive'
+              href='https://github.com/zxiar/'
               target='_blank'
               rel='noopener noreferrer'
               elevation={2}
@@ -1809,6 +1821,10 @@ function App() {
             </Paper>
           </Box>
         </Container>
+
+        {/* PWA 安装提示 */}
+        <PWAInstallPrompt />
+        
       </Box>
     </ThemeProvider>
   );
