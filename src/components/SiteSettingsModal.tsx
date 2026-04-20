@@ -334,13 +334,13 @@ export default function SiteSettingsModal({
             <TextField
               id='description'
               name='description'
-              label='网站描述'
+              label=''
               multiline
               rows={2}
               fullWidth
               value={formData.description || ''}
               onChange={handleChange}
-              placeholder='简短的网站描述'
+              placeholder=''
               variant='outlined'
               size='small'
             />
@@ -349,13 +349,13 @@ export default function SiteSettingsModal({
             <TextField
               id='notes'
               name='notes'
-              label='备注'
+              label=''
               multiline
               rows={3}
               fullWidth
               value={formData.notes || ''}
               onChange={handleChange}
-              placeholder='可选的私人备注'
+              placeholder=''
               variant='outlined'
               size='small'
             />
