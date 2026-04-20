@@ -95,7 +95,7 @@ export const zhConfig: DefaultTheme.Config = {
   returnToTopLabel: '回到顶部',
 
   editLink: {
-    pattern: 'https://github.com/zqq-nuli/Cloudflare-Navihive/edit/main/docs/:path',
+    pattern: 'https://github.com/zxiar/',
     text: '在 GitHub 上编辑此页面',
   },
 };
