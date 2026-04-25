@@ -12,7 +12,7 @@
     "d1_databases": [
         {
             "binding": "DB",
-            "database_name": "navihive-db",
+            "database_name": "zxiar-navihive",
             "database_id": "9eda31f3-5119-4369-a8a3-b18bfea51269"
         }
     ],
