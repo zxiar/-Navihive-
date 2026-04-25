@@ -15,52 +15,52 @@ export interface SearchEngine {
  */
 export const SEARCH_ENGINES: SearchEngine[] = [
   {
-    key: 'google',
-    name: 'Google',
-    template: 'https://www.google.com/search?q={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.google.com?larger=true',
-  },
-  {
-    key: 'baidu',
-    name: '百度',
-    template: 'https://www.baidu.com/s?wd={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.baidu.com?larger=true',
+    key: 'github',
+    name: 'Github',
+    template: 'https://github.com/search?q={q}&type=repositories',
+    icon: 'https://wi.zxiar.vip/ss5',
   },
   {
     key: 'bing',
     name: 'Bing',
     template: 'https://www.bing.com/search?q={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.bing.com?larger=true',
+    icon: 'https://wi.zxiar.vip/ss6',
+  },
+  {
+    key: 'google',
+    name: 'Google',
+    template: 'https://www.google.com/search?q={q}',
+    icon: 'https://wi.zxiar.vip/ss2',
+  },
+  {
+    key: 'baidu',
+    name: '百度',
+    template: 'https://www.baidu.com/s?wd={q}',
+    icon: 'https://wi.zxiar.vip/ss7',
   },
   {
     key: 'duckduckgo',
     name: 'DuckDuckGo',
     template: 'https://duckduckgo.com/?q={q}',
-    icon: 'https://www.faviconextractor.com/favicon/duckduckgo.com?larger=true',
-  },
-  {
-    key: 'github',
-    name: 'GitHub',
-    template: 'https://github.com/search?q={q}&type=repositories',
-    icon: 'https://www.faviconextractor.com/favicon/github.com?larger=true',
+    icon: 'https://wi.zxiar.vip/ss3',
   },
   {
     key: 'bilibili',
     name: '哔哩哔哩',
     template: 'https://search.bilibili.com/all?keyword={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.bilibili.com?larger=true',
+    icon: 'https://wi.zxiar.vip/ss1',
   },
   {
     key: 'youtube',
     name: 'YouTube',
     template: 'https://www.youtube.com/results?search_query={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.youtube.com?larger=true',
+    icon: 'https://wi.zxiar.vip/ss4',
   },
   {
     key: 'zhihu',
     name: '知乎',
     template: 'https://www.zhihu.com/search?type=content&q={q}',
-    icon: 'https://www.faviconextractor.com/favicon/www.zhihu.com?larger=true',
+    icon: 'https://wi.zxiar.vip/ss8',
   },
 ];
 
