@@ -6,7 +6,7 @@ import { enConfig } from './en';
 export default defineConfig({
   // 站点基本信息
   title: '泽希安の妙妙工具',
-  description: 'Cloudflare-Navihive',
+  description: '/',
 
   // GitHub Pages 部署路径（仓库名称）
   base: '/Cloudflare-Navihive/',
