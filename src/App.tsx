@@ -11,7 +11,6 @@ import PWAInstallPrompt from './components/PWAInstallPrompt';
 import SearchBox from './components/SearchBox';
 import { sanitizeCSS, extractDomain } from './utils/url';
 import { SearchResultItem } from './utils/search';
-import { cleanExpiredIconCache } from './utils/iconCache';
 import './App.css';
 import {
   DndContext,
@@ -363,9 +362,6 @@ function App() {
   useEffect(() => {
     // 检查认证状态
     checkAuthStatus();
-
-        // 清理过期的图标缓存
-    cleanExpiredIconCache().catch(console.error);
 
     // 确保初始化时重置排序状态
     setSortMode(SortMode.None);
