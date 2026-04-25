@@ -5,8 +5,8 @@ import { enConfig } from './en';
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   // 站点基本信息
-  title: 'NaviHive',
-  description: '现代化个人导航站 - Cloudflare Workers 驱动',
+  title: '泽希安の妙妙工具',
+  description: 'Cloudflare-Navihive',
 
   // GitHub Pages 部署路径（仓库名称）
   base: '/Cloudflare-Navihive/',
@@ -33,7 +33,7 @@ export default defineConfig({
 
     // 社交链接
     socialLinks: [
-      { icon: 'github', link: 'https://github.com/zqq-nuli/Cloudflare-Navihive' },
+      { icon: 'github', link: 'https://github.com/zxiar/' },
     ],
 
     // 搜索
@@ -75,7 +75,7 @@ export default defineConfig({
     ['meta', { name: 'theme-color', content: '#2D6CDF' }],
     ['meta', { property: 'og:type', content: 'website' }],
     ['meta', { property: 'og:title', content: 'NaviHive 文档' }],
-    ['meta', { property: 'og:description', content: '现代化个人导航站 - Cloudflare Workers 驱动' }],
+    ['meta', { property: 'og:description', content: 'Cloudflare-Navihive' }],
   ],
 
   // Markdown 配置
