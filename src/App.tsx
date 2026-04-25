@@ -8,9 +8,7 @@ import GroupCard from './components/GroupCard';
 import LoginForm from './components/LoginForm';
 import LazyBackground from './components/LazyBackground';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
-import SearchBox from './components/SearchBox';
 import { sanitizeCSS, extractDomain } from './utils/url';
-import { SearchResultItem } from './utils/search';
 import './App.css';
 import {
   DndContext,
@@ -99,8 +97,6 @@ const DEFAULT_CONFIGS = {
   'site.mobileBackgroundImage': 'https://wi.zxiar.vip/liushi.svg', // 移动端背景图片URL，留空则继承桌面设置
   'site.backgroundOpacity': '1.00', // 背景蒙版透明度
   'site.iconApi': 'https://www.faviconextractor.com/favicon/{domain}?larger=true', // 默认使用的API接口，带上 ?larger=true 参数可以获取最大尺寸的图标
-  'site.searchBoxEnabled': 'true', // 是否启用搜索框
-  'site.searchBoxGuestEnabled': 'true', // 访客是否可以使用搜索框
 };
 
 function App() {
@@ -1136,49 +1132,6 @@ function App() {
             </Stack>
           </Box>
 
-          {/* 搜索框 - 根据配置条件渲染 */}
-          {(() => {
-            // 检查搜索框是否启用
-            const searchBoxEnabled = configs['site.searchBoxEnabled'] === 'true';
-            if (!searchBoxEnabled) {
-              return null;
-            }
-
-            // 如果是访客模式，检查访客是否可用搜索框
-            if (viewMode === 'readonly') {
-              const guestEnabled = configs['site.searchBoxGuestEnabled'] === 'true';
-              if (!guestEnabled) {
-                return null;
-              }
-            }
-
-            return (
-              <Box sx={{ mb: 4 }}>
-                <SearchBox
-                  groups={groups.map((g) => ({
-                    id: g.id,
-                    name: g.name,
-                    order_num: g.order_num,
-                    is_public: g.is_public,
-                    created_at: g.created_at,
-                    updated_at: g.updated_at,
-                  }))}
-                  sites={groups.flatMap((g) => g.sites || [])}
-                  onInternalResultClick={(result: SearchResultItem) => {
-                    // 可选：滚动到对应的元素
-                    if (result.type === 'group') {
-                      const groupElement = document.getElementById(`group-${result.id}`);
-                      groupElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    } else if (result.type === 'site' && result.groupId) {
-                      const groupElement = document.getElementById(`group-${result.groupId}`);
-                      groupElement?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                    }
-                  }}
-                />
-              </Box>
-            );
-          })()}
-
           {loading && (
             <Box
               sx={{
@@ -1630,59 +1583,6 @@ function App() {
                       值越大，背景图片越清晰，内容可能越难看清
                     </Typography>
                   </Box>
-                </Box>
-                {/* 搜索框功能设置 */}
-                <Box sx={{ mb: 1 }}>
-                  <Typography variant='subtitle1' gutterBottom>
-                    搜索框功能设置
-                  </Typography>
-                  <FormControlLabel
-                    control={
-                      <Switch
-                        checked={tempConfigs['site.searchBoxEnabled'] === 'true'}
-                        onChange={(e) =>
-                          setTempConfigs({
-                            ...tempConfigs,
-                            'site.searchBoxEnabled': e.target.checked ? 'true' : 'false',
-                          })
-                        }
-                        color='primary'
-                      />
-                    }
-                    label={
-                      <Box>
-                        <Typography variant='body1'>启用搜索框</Typography>
-                        <Typography variant='caption' color='text.secondary'>
-                          控制是否在页面中显示搜索框功能
-                        </Typography>
-                      </Box>
-                    }
-                  />
-                  {tempConfigs['site.searchBoxEnabled'] === 'true' && (
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={tempConfigs['site.searchBoxGuestEnabled'] === 'true'}
-                          onChange={(e) =>
-                            setTempConfigs({
-                              ...tempConfigs,
-                              'site.searchBoxGuestEnabled': e.target.checked ? 'true' : 'false',
-                            })
-                          }
-                          color='primary'
-                        />
-                      }
-                      label={
-                        <Box>
-                          <Typography variant='body1'>访客可用搜索框</Typography>
-                          <Typography variant='caption' color='text.secondary'>
-                            允许未登录的访客使用搜索功能
-                          </Typography>
-                        </Box>
-                      }
-                      sx={{ ml: 4, mt: 1 }}
-                    />
-                  )}
                 </Box>
                 <TextField
                   margin='dense'
