@@ -8,6 +8,7 @@ import GroupCard from './components/GroupCard';
 import LoginForm from './components/LoginForm';
 import LazyBackground from './components/LazyBackground';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
+import { cleanExpiredIconCache } from './utils/iconCache';
 import { sanitizeCSS, extractDomain } from './utils/url';
 import './App.css';
 import {
@@ -358,6 +359,9 @@ function App() {
   useEffect(() => {
     // 检查认证状态
     checkAuthStatus();
+
+    // 清理过期的图标缓存
+    cleanExpiredIconCache().catch(console.error);
 
     // 确保初始化时重置排序状态
     setSortMode(SortMode.None);
