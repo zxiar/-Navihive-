@@ -1,9 +1,9 @@
 {
   "name": "泽希安の妙妙工具",
-  "short_name": " ",
-  "description": " ",
-  "start_url": " ",
-  "scope": " ",
+  "short_name": "",
+  "description": "",
+  "start_url": "",
+  "scope": "",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#1976d2",
