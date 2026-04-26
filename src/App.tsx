@@ -92,8 +92,8 @@ enum SortMode {
 // 默认配置
 const DEFAULT_CONFIGS = {
   'site.title': '泽希安の妙妙工具',
-  'site.name': '/',
-  'site.customCss': '/',
+  'site.name': '',
+  'site.customCss': '',
   'site.backgroundImage': 'https://wi.zxiar.vip/ots14.svg', // 背景图片URL
   'site.mobileBackgroundImage': 'https://wi.zxiar.vip/liushi.svg', // 移动端背景图片URL，留空则继承桌面设置
   'site.backgroundOpacity': '1.00', // 背景蒙版透明度
